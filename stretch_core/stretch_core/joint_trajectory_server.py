@@ -118,12 +118,12 @@ class JointTrajectoryAction:
         # we should write a unified cleanup function that releases the lock and ensure
         # all return logic first calls that function.
         self.node.robot_mode_rwlock.acquire_read()
-        if self.node.robot_mode not in ['position', 'trajectory', 'navigation']:
+        if self.node.robot_mode not in ['position', 'trajectory', 'navigation', 'velocity']:
             self.node.robot_mode_rwlock.release_read()
             return self.error_callback(goal_handle, FollowJointTrajectory.Result.INVALID_GOAL, "Cannot execute goals while in mode={0}".format(self.node.robot_mode))
         if self.node.streaming_position_activated:
             return self.error_callback(goal_handle, FollowJointTrajectory.Result.INVALID_GOAL, "Cannot execute goals while Streaming Position Controller is activated.".format(self.node.robot_mode))
-        if self.node.robot_mode in ['position','navigation']:
+        if self.node.robot_mode in ['position','navigation','velocity']:
             # For now, ignore goal time and configuration tolerances.
             commanded_joint_names = goal.trajectory.joint_names
             self.node.get_logger().info(("{0} joint_traj action: New trajectory received with joint_names = "
@@ -165,7 +165,7 @@ class JointTrajectoryAction:
                 self.node.get_logger().debug(("{0} joint_traj action: "
                                 "target point #{1} = <{2}>").format(self.node.node_name, pointi, point))
 
-                valid_goals = [c.set_goal(point, self.invalid_goal_callback, self.node.fail_out_of_range_goal)
+                valid_goals = [c.set_goal(point, self.invalid_goal_callback, self.node.fail_out_of_range_goal, robot_mode = self.node.robot_mode)
                             for c in self.command_groups]
                 if not all(valid_goals):
                     # At least one of the goals violated the requirements
@@ -183,7 +183,7 @@ class JointTrajectoryAction:
                     self.node.robot.push_command()
                     
                 for c in self.command_groups:
-                    c.init_execution(self.node.robot, robot_status)
+                    c.init_execution(self.node.robot, robot_status, robot_mode = self.node.robot_mode)
                 # self.node.robot.push_command() #Moved to an asynchronous call in stretch_driver
                 self.node.dirty_command=True
 
@@ -222,7 +222,7 @@ class JointTrajectoryAction:
                             return FollowJointTrajectory.Result()
 
                     robot_status = self.node.robot.get_status()
-                    named_errors = [c.update_execution(robot_status, contact_detected_callback=self.contact_detected_callback)
+                    named_errors = [c.update_execution(robot_status, contact_detected_callback=self.contact_detected_callback, robot_mode=self.node.robot_mode)
                                     for c in self.command_groups]
                     # It's not clear how this could ever happen. The
                     # groups in command_groups.py seem to return
@@ -355,7 +355,7 @@ class JointTrajectoryAction:
         self.node.robot_mode_rwlock.acquire_read()
         curr_mode = copy.copy(self.node.robot_mode)
         self.node.robot_mode_rwlock.release_read()
-        if curr_mode in ['position','navigation']:
+        if curr_mode in ['position','navigation','velocity']:
             # Stop all joints
             self.node.robot.base.left_wheel.enable_safety()
             self.node.robot.base.right_wheel.enable_safety()

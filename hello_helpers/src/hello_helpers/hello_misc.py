@@ -11,6 +11,7 @@ from rclpy.duration import Duration
 from rclpy.time import Time
 from rclpy.clock import Clock
 from rclpy.node import Node
+import rclpy.time
 import tf2_ros
 # import ros_numpy  TODO(dlu): Fix https://github.com/eric-wieser/ros_numpy/issues/20
 import numpy as np
@@ -209,6 +210,29 @@ class HelloNode(Node):
             point1.effort = joint_efforts
             trajectory_goal.trajectory.points = [point1]
         
+        if blocking:
+            return self.trajectory_client.send_goal(trajectory_goal)
+        else:
+            return self.trajectory_client.send_goal_async(trajectory_goal)
+        
+    def move_at_speed(self, speed, blocking=True, custom_contact_thresholds=False):
+        if self.dryrun:
+            return
+        
+        point = JointTrajectoryPoint()
+        point.time_from_start = Duration(seconds=0.0).to_msg()
+
+        joint_names = [key for key in speed]
+        trajectory_goal = FollowJointTrajectory.Goal()
+        trajectory_goal.goal_time_tolerance = Duration(seconds=1.0).to_msg()
+        trajectory_goal.trajectory.joint_names = joint_names
+
+        if not custom_contact_thresholds:
+            point.velocities = [joint_velocity for joint_velocity in speed.values()]
+
+        else:
+            raise NotImplementedError
+    
         if blocking:
             return self.trajectory_client.send_goal(trajectory_goal)
         else:
