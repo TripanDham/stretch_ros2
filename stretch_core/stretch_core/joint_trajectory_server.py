@@ -189,6 +189,7 @@ class JointTrajectoryAction:
 
                 goals_reached = [c.goal_reached() for c in self.command_groups]
                 goal_start_time = self.node.get_clock().now()
+                self.node.get_logger().info("Goals reached: {0}".format(goals_reached))
 
                 while not all(goals_reached):
                     # If goal is flagged as no longer active (ie. another goal was accepted),
@@ -224,6 +225,7 @@ class JointTrajectoryAction:
                     robot_status = self.node.robot.get_status()
                     named_errors = [c.update_execution(robot_status, contact_detected_callback=self.contact_detected_callback, robot_mode = self.node.robot_mode)
                                     for c in self.command_groups]
+                    self.node.get_logger().debug("error: {0}".format(named_errors[0][1]))
                     # It's not clear how this could ever happen. The
                     # groups in command_groups.py seem to return
                     # (self.name, self.error) or None, rather than True.

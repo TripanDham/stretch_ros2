@@ -107,13 +107,13 @@ class SimpleCommandGroup:
         robot_mode = kwargs["robot_mode"]
         if self.active:
             goal_pos = point.positions[self.index] if len(point.positions) > self.index else None
-            if goal_pos is None and robot_mode != ['velocity']:
+            if goal_pos is None and robot_mode != 'velocity':
                 err_str = ("Received goal point with positions array length={0}. "
                            "This joint ({1})'s index is {2}. Length of array must cover all joints listed "
                            "in commanded_joint_names.").format(len(point.positions), self.name, self.index)
                 invalid_goal_callback(err_str)
                 return False
-            elif goal_pos is not None and robot_mode == ['velocity']:
+            elif goal_pos is not None and robot_mode == 'velocity':
                 err_str = (f"Received goal point with position for joint {self.name} (index {self.index}) "
                            "during velocity mode, which is not allowed.")
                 invalid_goal_callback(err_str)
