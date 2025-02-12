@@ -701,6 +701,7 @@ class LiftCommandGroup(SimpleCommandGroup):
     def init_execution(self, robot, robot_status, **kwargs):
         robot_mode = kwargs["robot_mode"]
         if self.active:
+            _, lift_error = self.update_execution(robot_status, robot_mode=robot_mode)
             if robot_mode == 'velocity':
                 robot.lift.set_velocity(self.goal['velocity'],
                                         a_m=self.goal['acceleration'],
