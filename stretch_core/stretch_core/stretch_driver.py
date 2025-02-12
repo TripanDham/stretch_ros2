@@ -69,7 +69,7 @@ class StretchDriver(Node):
         self.robot_mode_rwlock = RWLock()
         self.robot_mode = None
 
-        self.control_modes = ['position', 'navigation', 'trajectory', 'gamepad']
+        self.control_modes = ['position', 'navigation', 'trajectory', 'gamepad', 'velocity']
         self.prev_runstop_state = None
         self.dirty_command = False
 
@@ -97,7 +97,7 @@ class StretchDriver(Node):
 
     def set_mobile_base_velocity_callback(self, twist):
         self.robot_mode_rwlock.acquire_read()
-        if self.robot_mode != 'navigation':
+        if self.robot_mode not in ['navigation', 'velocity']:
             self.get_logger().error('{0} action server must be in navigation mode to '
                                     'receive a twist on cmd_vel. '
                                     'Current mode = {1}.'.format(self.node_name, self.robot_mode))
@@ -129,7 +129,7 @@ class StretchDriver(Node):
         
         # set new mobile base velocities, if appropriate
         # check on thread safety for this with callback that sets velocity command values
-        if self.robot_mode == 'navigation':
+        if self.robot_mode in ['navigation', 'velocity']:
             time_since_last_twist = self.get_clock().now() - self.last_twist_time
             if time_since_last_twist < self.timeout:
                 self.robot.base.set_velocity(self.linear_velocity_mps, self.angular_velocity_radps)
@@ -551,6 +551,14 @@ class StretchDriver(Node):
             self.robot.base.enable_pos_incr_mode()
         self.change_mode('position', code_to_run)
         return True, 'Now in position mode.'
+    
+    def turn_on_velocity_mode(self):
+        def code_to_run():
+            self.linear_velocity_mps = 0.0
+            self.angular_velocity_radps = 0.0
+        self.change_mode('velocity', code_to_run)
+        return True, 'Now in velocity mode.'
+
 
     def turn_on_trajectory_mode(self):
         # Trajectory mode is able to execute plans from
@@ -647,6 +655,12 @@ class StretchDriver(Node):
         response.message = message
         return response
 
+    def velocity_mode_service_callback(self, request, response):
+        success, message = self.turn_on_velocity_mode()
+        response.success = success
+        response.message = message
+        return response
+    
     def gamepad_mode_service_callback(self, request, response):
         success, message = self.turn_on_gamepad_mode()
         response.success = success
@@ -816,6 +830,8 @@ class StretchDriver(Node):
             self.turn_on_trajectory_mode()
         elif mode ==  "gamepad":
             self.turn_on_gamepad_mode()
+        elif mode == "velocity":
+            self.turn_on_velocity_mode()
 
         self.declare_parameter('broadcast_odom_tf', False)
         self.broadcast_odom_tf = self.get_parameter('broadcast_odom_tf').value
@@ -956,6 +972,10 @@ class StretchDriver(Node):
         self.switch_to_gamepad_mode_service = self.create_service(Trigger,
                                                                     '/switch_to_gamepad_mode',
                                                                     self.gamepad_mode_service_callback)
+        
+        self.switch_to_velocity_mode_service = self.create_service(Trigger, 
+                                                                   '/switch_to_velocity_mode', 
+                                                                   self.velocity_mode_service_callback)
 
         self.stop_the_robot_service = self.create_service(Trigger,
                                                           '/stop_the_robot',
