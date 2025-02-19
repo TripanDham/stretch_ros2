@@ -224,6 +224,7 @@ class HelloNode(Node):
         trajectory_goal = FollowJointTrajectory.Goal()
         trajectory_goal.goal_time_tolerance = Duration(seconds=1.0).to_msg()
         trajectory_goal.trajectory.joint_names = joint_names
+        trajectory_goal.trajectory.points = [point]
 
         if not custom_contact_thresholds:
             point.velocities = [joint_velocity for joint_velocity in speed.values()]
