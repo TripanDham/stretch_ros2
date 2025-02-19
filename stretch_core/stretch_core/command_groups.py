@@ -126,7 +126,7 @@ class SimpleCommandGroup:
                            "during velocity mode, which is not allowed.")
                 invalid_goal_callback(err_str)
                 return False
-            if goal_pos is not None:
+            elif goal_pos is not None:
                 self.goal['position'] = hm.bound_ros_command(self.range, goal_pos, fail_out_of_range_goal)
 
             self.goal['velocity'] = point.velocities[self.index] if len(point.velocities) > self.index else None
@@ -625,7 +625,7 @@ class ArmCommandGroup(SimpleCommandGroup):
             if goal_pos is not None:
                 self.goal['position'] = hm.bound_ros_command(self.range, goal_pos, fail_out_of_range_goal)
             
-            if self.goal['position'] is None and robot_mode == 'position':
+            if self.goal['position'] is None and robot_mode != 'velocity':
                 err_str = ("Received {0} goal point that is out of bounds. "
                             "Range = {1}, but goal point = {2}.").format(self.name if not self.is_named_wrist_extension else self.wrist_extension_name, self.range, goal_pos)
                 invalid_goal_callback(err_str)
@@ -701,6 +701,7 @@ class LiftCommandGroup(SimpleCommandGroup):
     def init_execution(self, robot, robot_status, **kwargs):
         robot_mode = kwargs["robot_mode"]
         if self.active:
+            _, lift_error = self.update_execution(robot_status, robot_mode=robot_mode)
             if robot_mode == 'velocity':
                 robot.lift.set_velocity(self.goal['velocity'],
                                         a_m=self.goal['acceleration'],
@@ -724,7 +725,7 @@ class LiftCommandGroup(SimpleCommandGroup):
                 contact_detected_callback("{0} contact detected.".format(self.name))
                 return True
             if robot_mode == 'velocity':
-                self.error = self.goal['velocity'] - robot_status['lift']['vel']
+                self.error = 0.0
             else:
                 self.error = self.goal['position'] - robot_status['lift']['pos']
             return self.name, self.error
