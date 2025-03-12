@@ -121,11 +121,11 @@ class SimpleCommandGroup:
                            "in commanded_joint_names.").format(len(point.positions), self.name, self.index)
                 invalid_goal_callback(err_str)
                 return False
-            elif goal_pos is not None and robot_mode == 'velocity':
-                err_str = (f"Received goal point with position for joint {self.name} (index {self.index}) "
-                           "during velocity mode, which is not allowed.")
-                invalid_goal_callback(err_str)
-                return False
+            # elif goal_pos is not None and robot_mode == 'velocity':
+            #     err_str = (f"Received goal point with position for joint {self.name} (index {self.index}) "
+            #                "during velocity mode, which is not allowed.")
+            #     invalid_goal_callback(err_str)
+            #     return False
             elif goal_pos is not None:
                 self.goal['position'] = hm.bound_ros_command(self.range, goal_pos, fail_out_of_range_goal)
 
