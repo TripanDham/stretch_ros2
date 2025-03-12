@@ -34,7 +34,7 @@ class JointTrajectoryAction:
         self.node = node
         self._goal_handle = None
         self._goal_lock = threading.Lock()
-        self.server = ActionServer(self.node, FollowJointTrajectory, '/stretch_controller/follow_joint_trajectory',
+        self.server = ActionServer(self.node, FollowJointTrajectory, '/stretch_b_controller/follow_joint_trajectory',
                                    execute_callback=self.execute_cb,
                                    cancel_callback=self.cancel_cb,
                                    goal_callback=self.goal_cb,

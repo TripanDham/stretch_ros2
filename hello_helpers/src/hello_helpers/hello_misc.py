@@ -321,7 +321,7 @@ class HelloNode(Node):
 
         reentrant_cb = ReentrantCallbackGroup()
 
-        self.trajectory_client = ActionClient(self, FollowJointTrajectory, '/stretch_controller/follow_joint_trajectory', callback_group=reentrant_cb)
+        self.trajectory_client = ActionClient(self, FollowJointTrajectory, '/stretch_b_controller/follow_joint_trajectory', callback_group=reentrant_cb)
         server_reached = self.trajectory_client.wait_for_server(timeout_sec=60.0)
         if not server_reached:
             self.get_logger().error('Unable to connect to arm action server. Timeout exceeded.')

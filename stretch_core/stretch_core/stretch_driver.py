@@ -44,6 +44,7 @@ class StretchDriver(Node):
 
     def __init__(self):
         super().__init__('stretch_driver')
+        self.robot_name = "b_"
         self.use_robotis_head = True
         self.use_robotis_end_of_arm = True
 
@@ -261,7 +262,7 @@ class StretchDriver(Node):
             b = TransformStamped()
             b.header.stamp = current_time
             b.header.frame_id = self.base_frame_id
-            b.child_frame_id = "base_footprint"
+            b.child_frame_id = f'{self.robot_name}base_footprint'
             b.transform.translation.x = 0.0
             b.transform.translation.y = 0.0
             b.transform.translation.z = 0.0
@@ -373,7 +374,7 @@ class StretchDriver(Node):
         # most distal joint of the telescoping arm model. The joints
         # are connected in series such that moving the most proximal
         # joint moves all the other joints in the global frame.
-        joint_state.name = ['wrist_extension', 'joint_lift', 'joint_arm_l3', 'joint_arm_l2', 'joint_arm_l1', 'joint_arm_l0']
+        joint_state.name = [f'{self.robot_name}wrist_extension', f'{self.robot_name}joint_lift', f'{self.robot_name}joint_arm_l3', f'{self.robot_name}joint_arm_l2', f'{self.robot_name}joint_arm_l1', f'{self.robot_name}joint_arm_l0']
 
         # set positions of the telescoping joints
         positions = [pos_out / 4.0 for i in range(4)]
@@ -397,7 +398,7 @@ class StretchDriver(Node):
         efforts.insert(0, eff_out)
 
         if self.use_robotis_head:
-            head_joint_names = ['joint_head_pan', 'joint_head_tilt']
+            head_joint_names = [f'{self.robot_name}joint_head_pan', f'{self.robot_name}joint_head_tilt']
             joint_state.name.extend(head_joint_names)
 
             positions.append(head_pan_rad)
@@ -410,12 +411,12 @@ class StretchDriver(Node):
 
         if self.use_robotis_end_of_arm:
             if dex_wrist_attached:
-                end_of_arm_joint_names = ['joint_wrist_yaw', 'joint_wrist_pitch', 'joint_wrist_roll']
+                end_of_arm_joint_names = [f'{self.robot_name}joint_wrist_yaw', f'{self.robot_name}joint_wrist_pitch', f'{self.robot_name}joint_wrist_roll']
                 if 'stretch_gripper' in self.robot.end_of_arm.joints:
-                    end_of_arm_joint_names = end_of_arm_joint_names + ['joint_gripper_finger_left', 'joint_gripper_finger_right']
+                    end_of_arm_joint_names = end_of_arm_joint_names + [f'{self.robot_name}joint_gripper_finger_left', f'{self.robot_name}joint_gripper_finger_right']
             else:
                 if 'stretch_gripper' in self.robot.end_of_arm.joints:
-                    end_of_arm_joint_names = ['joint_wrist_yaw', 'joint_gripper_finger_left', 'joint_gripper_finger_right']
+                    end_of_arm_joint_names = [f'{self.robot_name}joint_wrist_yaw', f'{self.robot_name}joint_gripper_finger_left', f'{self.robot_name}joint_gripper_finger_right']
             
             joint_state.name.extend(end_of_arm_joint_names)
 
@@ -934,9 +935,9 @@ class StretchDriver(Node):
         self.get_logger().info(f"rate = {self.joint_state_rate} Hz")
         self.get_logger().info(f"twist timeout = {self.timeout_s} s")
 
-        self.base_frame_id = 'base_link'
+        self.base_frame_id = f'{self.robot_name}base_link'
         self.get_logger().info(f"base_frame_id = {self.base_frame_id}")
-        self.odom_frame_id = 'odom'
+        self.odom_frame_id = f'{self.robot_name}odom'
         self.get_logger().info(f"odom_frame_id = {self.odom_frame_id}")
 
         self.joint_state_pub = self.create_publisher(JointState, 'joint_states', 1)

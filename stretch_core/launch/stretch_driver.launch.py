@@ -35,18 +35,20 @@ def generate_launch_description():
         description='Path to the calibrated controller args file'
     )
 
-    robot_description_content = launch_ros.parameter_descriptions.ParameterValue( Command(['xacro ', str(get_package_share_path('stretch_description') / 'urdf' / 'stretch.urdf')]), value_type=str)
+    robot_description_content = launch_ros.parameter_descriptions.ParameterValue( Command(['xacro ', str(get_package_share_path('stretch_description') / 'urdf' / 'stretch_b.urdf')]), value_type=str)
 
     joint_state_publisher = Node(package='joint_state_publisher',
                                  executable='joint_state_publisher',
                                  output='log',
-                                 parameters=[{'source_list': ['/stretch/joint_states']},
+                                 namespace='b',
+                                 parameters=[{'source_list': ['/b/stretch/joint_states']},  
                                              {'rate': 30.0}],
                                  arguments=['--ros-args', '--log-level', 'error'],)
 
     robot_state_publisher = Node(package='robot_state_publisher',
                                  executable='robot_state_publisher',
                                  output='both',
+                                 namespace='b',
                                  parameters=[{'robot_description': robot_description_content},
                                              {'publish_frequency': 30.0}],
                                  arguments=['--ros-args', '--log-level', 'error'],)
@@ -64,8 +66,9 @@ def generate_launch_description():
                           executable='stretch_driver',
                           emulate_tty=True,
                           output='screen',
-                          remappings=[('cmd_vel', '/stretch/cmd_vel'),
-                                      ('joint_states', '/stretch/joint_states')],
+                          namespace='b',
+                          remappings=[('cmd_vel', '/b/stretch/cmd_vel'),
+                                      ('joint_states', '/b/stretch/joint_states')],
                           parameters=stretch_driver_params)
 
     return LaunchDescription([declare_broadcast_odom_tf_arg,
